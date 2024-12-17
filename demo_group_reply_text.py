@@ -29,35 +29,7 @@ class MyClient(botpy.Client):
 
         reply_str = ""
         
-        if message.content.startswith(" /天气 "):
-
-            address = message.content.replace(" ", "")[3:]
-
-            if address == "":
-                if user_openid not in member_city:
-                    reply_str = "请设置默认城市"
-                else:
-                    address = member_city[user_openid]
-
-            addressCode_json = requests.get("https://restapi.amap.com/v3/config/district",{"keywords":address,"subdistrict":0,"key":gaodekey}).json()["districts"]
-            if len(addressCode_json) == 0:
-                reply_str = "不认识这个城市捏"
-            else:
-                addressCode = addressCode_json[0]["adcode"]
-                weather = requests.get("https://restapi.amap.com/v3/weather/weatherInfo",{"city":addressCode,"key":gaodekey,"extensions":"base"}).json()
-                temperature = weather["lives"][0]["temperature"]
-                reply_str = address + "目前温度为：" + temperature + "度"
-
-            # 回复
-            messageResult = await message._api.post_group_message(
-                group_openid=message.group_openid,
-                msg_type=0, 
-                msg_id=message.id,
-                content=reply_str
-                )
-            _log.info(messageResult)
-
-        if message.content.startswith(" /天气默认城市 "):
+        if message.content.startswith(" /天气默认城市"):
             # 截取地址
             member_city[user_openid] = message.content.replace(" ", "")[7:]
             print(member_city)
@@ -73,8 +45,37 @@ class MyClient(botpy.Client):
                 content=reply_str
                 )
             _log.info(messageResult)
-            
-        if message.content.startswith(" /摸鱼日历 "):
+
+        elif message.content.startswith(" /天气"):
+            address = message.content.replace(" ", "")[3:]
+            print(user_openid + "  " + address)
+
+            if (user_openid not in member_city) and (address == ""):
+                reply_str = "请设置默认城市"
+            else:
+                if address == "":
+                    address = member_city[user_openid]
+
+                addressCode_json = requests.get("https://restapi.amap.com/v3/config/district",{"keywords":address,"subdistrict":0,"key":gaodekey}).json()["districts"]
+                print(addressCode_json)
+                if len(addressCode_json) == 0:
+                    reply_str = "不认识这个城市捏"
+                else:
+                    addressCode = addressCode_json[0]["adcode"]
+                    weather = requests.get("https://restapi.amap.com/v3/weather/weatherInfo",{"city":addressCode,"key":gaodekey,"extensions":"base"}).json()
+                    temperature = weather["lives"][0]["temperature"]
+                    reply_str = address + "目前温度为：" + temperature + "度"
+
+            # 回复
+            messageResult = await message._api.post_group_message(
+                group_openid=message.group_openid,
+                msg_type=0, 
+                msg_id=message.id,
+                content=reply_str
+                )
+            _log.info(messageResult)
+
+        if message.content.startswith(" /摸鱼日历"):
             file_url = "https://api.j4u.ink/v1/store/redirect/moyu/calendar/today.png"  # 这里需要填写上传的资源Url
 
             try:
